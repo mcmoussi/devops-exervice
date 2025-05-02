@@ -12,19 +12,19 @@ spec:
       labels:
         app: hello-risf
     spec:
-     # securityContext:
-     #   runAsUser: 101
-     #   runAsGroup: 101
-     #   fsGroup: 101
+      securityContext:
+        runAsUser: 101
+        runAsGroup: 101
+      #  fsGroup: 101
       containers:
       - name: nginx
      #   securityContext:
      #     allowPrivilegeEscalation: false
      #     capabilities:
      #       drop: ["ALL"]
-        image: hello-risf:1.0
+        image: hello-risf:1.2
         ports:
-        - containerPort: 80
+        - containerPort: 8080
         resources:
           requests:
             cpu: "100m"
@@ -40,4 +40,4 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 80
+      targetPort: 8080

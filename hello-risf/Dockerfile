@@ -1,16 +1,11 @@
-FROM nginx:alpine
+FROM nginxinc/nginx-unprivileged:stable-alpine
 
-RUN mkdir -p /var/cache/nginx/client_temp && \
-    chown -R nginx:nginx /var/cache/nginx && \
-    chmod -R 755 /var/cache/nginx && \
-    touch /var/run/nginx.pid && \
-    chown -R nginx:nginx /var/run/nginx.pid
+ARG DOCROOT=/usr/share/nginx/html
 
-RUN sed -i '/access_log/d' /etc/nginx/nginx.conf && \
-    sed -i '/error_log/d' /etc/nginx/nginx.conf
+COPY --chown=nginx:nginx . ${DOCROOT}
 
-COPY index.html /usr/share/nginx/html/
+RUN find ${DOCROOT} -type d -exec chmod 755 {} \; && \
+    find ${DOCROOT} -type f -exec chmod 644 {} \;
 
-RUN chown nginx:nginx /usr/share/nginx/html/index.html
-
-USER root
+USER nginx
+EXPOSE 8080

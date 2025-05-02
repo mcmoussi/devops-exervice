@@ -12,62 +12,32 @@ spec:
       labels:
         app: hello-itsf
     spec:
+      securityContext:
+        runAsUser: 101  # UID de nginx
+        fsGroup: 101
       initContainers:
       - name: init-html
         image: alpine
-        command: ['sh', '-c', 'echo "<h1>HELLO ITSF</h1>" > /usr/share/nginx/html/index.html']
+        command: ["sh", "-c", "cp /tmp/index.html /usr/share/nginx/html/ && chmod 644 /usr/share/nginx/html/index.html"]
         volumeMounts:
+        - name: config-volume
+          mountPath: /tmp
         - name: html-volume
           mountPath: /usr/share/nginx/html
-      
       containers:
       - name: nginx
-        image: nginx:alpine
+        image: nginxinc/nginx-unprivileged:stable-alpine
         ports:
-        - containerPort: 80
+        - containerPort: 8080
         volumeMounts:
         - name: html-volume
           mountPath: /usr/share/nginx/html
-        lifecycle:
-          postStart:
-            exec:
-              command: ["/bin/sh", "-c", "chmod 644 /usr/share/nginx/html/index.html"]
-      
       volumes:
+      - name: config-volume
+        configMap:
+          name: itsf-html-config
       - name: html-volume
-        persistentVolumeClaim:
-          claimName: itsf-html-claim
-      - name: fallback-volume
         emptyDir: {}
-
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: itsf-html-volume
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 100Mi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/mnt/data/itsf-html"
-    type: DirectoryOrCreate
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: itsf-html-claim
-spec:
-  storageClassName: manual
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 50Mi
-  volumeName: itsf-html-volume
 
 ---
 apiVersion: v1
@@ -80,4 +50,4 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 80
+      targetPort: 8080
